@@ -7,11 +7,12 @@ import sys
 import argparse
 
 
-def remove_stopwords(input_file, stopwords, remove_punctuation=False):
+def remove_stopwords(input_file, stopwords, lowercase=False, remove_punctuation=False):
     for line in input_file:
         line_without_stopwords = []
         for word in line.split():
-            if word not in stopwords:
+            word_comparing = word.lower() if lowercase else word
+            if not word_comparing in stopwords:
                 if remove_punctuation:
                     if word.isalnum():
                         line_without_stopwords.append(word)
@@ -20,10 +21,14 @@ def remove_stopwords(input_file, stopwords, remove_punctuation=False):
         yield ' '.join(line_without_stopwords)
 
 
-def read_stopwords(input_file):
+def read_stopwords(input_file, lowercase=False):
     stopwords = set()
     for line in input_file:
-        stopwords.add(line.split()[0])
+        word = line.split()[0]
+        if lowercase:
+            stopwords.add(word.lower())
+        else:
+            stopwords.add(word)
     return stopwords
 
 
@@ -33,15 +38,18 @@ def main():
     parser.add_argument("stopword_list", help="path of the file containing the list of stop-words, one per line")
     parser.add_argument("input", nargs='?', help="path of the input file, default is standard input", default=None)
     parser.add_argument("output", nargs='?', help="path of the output file, default is standard output", default=None)
-    parser.add_argument("-p", "--remove_punctuation", help="also remove non alphanumeric words", action='store_true',
-                        default=False)
+    parser.add_argument("-l", "--lowercase", help="lowercase both words and stopwords when comparing them",
+                        action='store_true', default=False)
+    parser.add_argument("-p", "--remove_punctuation", help="also remove non alphanumeric words",
+                        action='store_true', default=False)
     args = parser.parse_args()
 
     stopword_file = open(args.stopword_list, 'r')
     input_file = sys.stdin if args.input is None else open(args.input, 'r')
     output_file = sys.stdout if args.output is None else open(args.output, 'w')
 
-    for line in remove_stopwords(input_file, read_stopwords(stopword_file), args.remove_punctuation):
+    stopwords = read_stopwords(stopword_file, args.lowercase)
+    for line in remove_stopwords(input_file, stopwords, args.lowercase, args.remove_punctuation):
         output_file.write(line)
         output_file.write('\n')
 
