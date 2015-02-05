@@ -7,12 +7,16 @@ import sys
 import argparse
 
 
-def remove_stopwords(input_file, stopwords):
+def remove_stopwords(input_file, stopwords, remove_punctuation=False):
     for line in input_file:
         line_without_stopwords = []
         for word in line.split():
             if word not in stopwords:
-                line_without_stopwords.append(word)
+                if remove_punctuation:
+                    if word.isalnum():
+                        line_without_stopwords.append(word)
+                else:
+                    line_without_stopwords.append(word)
         yield ' '.join(line_without_stopwords)
 
 
@@ -29,13 +33,15 @@ def main():
     parser.add_argument("stopword_list", help="path of the file containing the list of stop-words, one per line")
     parser.add_argument("input", nargs='?', help="path of the input file, default is standard input", default=None)
     parser.add_argument("output", nargs='?', help="path of the output file, default is standard output", default=None)
+    parser.add_argument("-p", "--remove_punctuation", help="also remove non alphanumeric words", action='store_true',
+                        default=False)
     args = parser.parse_args()
 
     stopword_file = open(args.stopword_list, 'r')
     input_file = sys.stdin if args.input is None else open(args.input, 'r')
     output_file = sys.stdout if args.output is None else open(args.output, 'w')
 
-    for line in remove_stopwords(input_file, read_stopwords(stopword_file)):
+    for line in remove_stopwords(input_file, read_stopwords(stopword_file), args.remove_punctuation):
         output_file.write(line)
         output_file.write('\n')
 
