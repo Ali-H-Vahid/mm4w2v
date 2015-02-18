@@ -14,7 +14,7 @@ def remove_stopwords(input_file, stopwords, lowercase=False, remove_punctuation=
             word_comparing = word.lower() if lowercase else word
             if not word_comparing in stopwords:
                 if remove_punctuation:
-                    if word.isalnum():
+                    if word.decode("utf-8").isalnum():
                         line_without_stopwords.append(word)
                 else:
                     line_without_stopwords.append(word)
